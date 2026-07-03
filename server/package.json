@@ -1,0 +1,23 @@
+{
+  "name": "tasker-server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Tasker's own backend — verifies the bearer @quant0/react obtained via the Edge Plane SDK + a local q0-agent, never the gateway directly. Not part of any npm workspace (depends on the sibling quant0-enterprise repo's sdks/typescript build output); install and run standalone from this directory.",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@quant0/sdk-core": "file:../../quant0-enterprise/sdks/typescript",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

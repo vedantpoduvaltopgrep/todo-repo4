@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   useAuth,
   useUser,
@@ -11,6 +11,10 @@ import {
 } from '@quant0/react'
 
 const ACCOUNT_PORTAL_URL = import.meta.env.VITE_ACCOUNT_PORTAL_URL ?? 'http://localhost:3001'
+// tasker-server (server/) — verifies the bearer via the Edge Plane SDK + a
+// local q0-agent, never the gateway directly. Optional: the panel below
+// degrades to a harmless "not running" message if it's not up.
+const TASKER_API_BASE = import.meta.env.VITE_TASKER_API_BASE ?? 'http://localhost:3101'
 const DEFAULT_MODE = import.meta.env.VITE_QUANT0_DEFAULT_MODE === 'embedded' ? 'embedded' : 'redirect'
 const ACCENT = '#2d5be3' // matches --accent in index.css — themes the embedded widgets to match
 const APPEARANCE = { variables: { colorPrimary: ACCENT } }
@@ -67,6 +71,28 @@ export default function TodoApp() {
   const [tokenOpen, setTokenOpen] = useState(false)
   const [tokenValue, setTokenValue] = useState('')
   const [toast, setToast] = useState({ show: false, msg: '' })
+  const [serverCheck, setServerCheck] = useState({ status: 'idle', data: null })
+
+  // Proves the backend-SDK half: tasker-server verifies this bearer via a
+  // local q0-agent, entirely offline from the gateway's point of view.
+  // Degrades harmlessly if the server (or its agent) isn't running.
+  useEffect(() => {
+    if (!isSignedIn) { setServerCheck({ status: 'idle', data: null }); return }
+    let cancelled = false
+    setServerCheck({ status: 'loading', data: null })
+    void (async () => {
+      try {
+        const token = await getToken()
+        const res = await fetch(`${TASKER_API_BASE}/api/me`, { headers: { Authorization: `Bearer ${token}` } })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        if (!cancelled) setServerCheck({ status: 'ok', data })
+      } catch (err) {
+        if (!cancelled) setServerCheck({ status: 'error', data: null, message: err.message })
+      }
+    })()
+    return () => { cancelled = true }
+  }, [isSignedIn, getToken])
 
   const showToast = (msg) => {
     setToast({ show: true, msg })
@@ -181,6 +207,14 @@ export default function TodoApp() {
                 {tokenValue}
               </div>
             )}
+
+            {/* Backend-SDK proof: tasker-server (server/) verifies this same
+                token via a local q0-agent, never calling the gateway. */}
+            <div style={{ marginTop: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.72rem', color: 'var(--ink-faint)' }}>
+              {serverCheck.status === 'loading' && 'Checking tasker-server…'}
+              {serverCheck.status === 'ok' && `✓ Verified server-side by tasker-server (subject ${serverCheck.data.subject.slice(0, 8)}…), via the local agent — never the gateway`}
+              {serverCheck.status === 'error' && 'tasker-server not reachable — optional, see server/README or docs/local-testing-q0-agent.md'}
+            </div>
           </div>
 
           <div style={{ display: 'flex', gap: '0.6rem', marginBottom: '1.5rem' }}>
