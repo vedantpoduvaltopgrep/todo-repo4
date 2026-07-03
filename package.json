@@ -1,0 +1,21 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Tasker — a small todo app demoing @quant0/react in both hosted-redirect and embedded-widget modes, and @quant0/browser directly for the mode toggle. Not an npm workspace member (depends on the sibling quant0-client repo's packages via file:); install standalone.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@quant0/browser": "file:../quant0-client/packages/quant0-browser",
+    "@quant0/react": "file:../quant0-client/packages/quant0-react",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.15.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.1",
+    "vite": "^7.3.2"
+  }
+}
