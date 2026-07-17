@@ -1,23 +1,30 @@
+import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AuthenticateWithRedirectCallback } from '@quant0/react'
+import quant0 from '../lib/quant0Client'
 
 // The redirect_uri landing page — completes the code exchange (PKCE
 // verifier + state check, both handled internally) and hands control back.
-// Used only by the hosted-redirect flow; the embedded widgets never
-// navigate here at all.
 export default function Callback() {
   const navigate = useNavigate()
+  const handledRef = useRef(false)
+
+  useEffect(() => {
+    // Guards against React StrictMode's double-invoked effects trying to
+    // consume an already-used authorization code.
+    if (handledRef.current) return
+    handledRef.current = true
+    quant0
+      .handleRedirectCallback()
+      .then(() => navigate('/', { replace: true }))
+      .catch((err) => {
+        console.error('sign-in failed', err)
+        alert(err?.message || 'Sign-in failed')
+        navigate('/', { replace: true })
+      })
+  }, [navigate])
 
   return (
     <>
-      <AuthenticateWithRedirectCallback
-        onComplete={() => navigate('/', { replace: true })}
-        onError={(err) => {
-          console.error('sign-in failed', err)
-          alert(err?.message || 'Sign-in failed')
-          navigate('/', { replace: true })
-        }}
-      />
       <div
         style={{
           display: 'flex',

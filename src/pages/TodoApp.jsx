@@ -1,56 +1,12 @@
 import { useEffect, useState } from 'react'
-import {
-  useAuth,
-  useUser,
-  useQuant0Context,
-  SignIn,
-  SignUp,
-  SignInButton,
-  SignUpButton,
-  SignOutButton,
-} from '@quant0/react'
+import { useAuth, useUser } from '../lib/AuthProvider'
+import quant0 from '../lib/quant0Client'
 
 const ACCOUNT_PORTAL_URL = import.meta.env.VITE_ACCOUNT_PORTAL_URL ?? 'http://localhost:3001'
 // tasker-server (server/) — verifies the bearer via the Edge Plane SDK + a
 // local q0-agent, never the gateway directly. Optional: the panel below
 // degrades to a harmless "not running" message if it's not up.
 const TASKER_API_BASE = import.meta.env.VITE_TASKER_API_BASE ?? 'http://localhost:3101'
-const DEFAULT_MODE = import.meta.env.VITE_QUANT0_DEFAULT_MODE === 'embedded' ? 'embedded' : 'redirect'
-const ACCENT = '#2d5be3' // matches --accent in index.css — themes the embedded widgets to match
-const APPEARANCE = { variables: { colorPrimary: ACCENT } }
-
-// ModeToggle switches the landing hero between the two ways @quant0/react
-// can drive sign-in: "redirect" (SignInButton/SignUpButton — a full-page
-// hop to the hosted login portal) and "embedded" (SignIn/SignUp rendered
-// in-page, no navigation at all). Same client_id, same app — just two
-// integration styles, switchable live for the demo.
-function ModeToggle({ mode, setMode }) {
-  return (
-    <div className="mode-toggle">
-      <button className={mode === 'redirect' ? 'active' : ''} onClick={() => setMode('redirect')}>
-        Redirect
-      </button>
-      <button className={mode === 'embedded' ? 'active' : ''} onClick={() => setMode('embedded')}>
-        Embedded
-      </button>
-    </div>
-  )
-}
-
-// EmbeddedAuth toggles between <SignIn> and <SignUp> in place — both
-// complete without ever navigating away from this page.
-function EmbeddedAuth() {
-  const [view, setView] = useState('signin')
-  return (
-    <div style={{ maxWidth: 400, margin: '2rem auto 0' }}>
-      {view === 'signin' ? (
-        <SignIn appearance={APPEARANCE} onSignUpClick={() => setView('signup')} />
-      ) : (
-        <SignUp appearance={APPEARANCE} onSignInClick={() => setView('signin')} />
-      )}
-    </div>
-  )
-}
 
 function LoadingScreen() {
   return (
@@ -63,9 +19,7 @@ function LoadingScreen() {
 export default function TodoApp() {
   const { isLoaded, isSignedIn, getToken } = useAuth()
   const { user } = useUser()
-  const { client } = useQuant0Context()
 
-  const [mode, setMode] = useState(DEFAULT_MODE)
   const [todos, setTodos] = useState(() => JSON.parse(sessionStorage.getItem('todos') || '[]'))
   const [inputVal, setInputVal] = useState('')
   const [tokenOpen, setTokenOpen] = useState(false)
@@ -113,7 +67,7 @@ export default function TodoApp() {
   }
 
   const manageAccount = () => {
-    void client.openAccountPortal({ accountPortalUrl: ACCOUNT_PORTAL_URL })
+    void quant0.openAccountPortal({ accountPortalUrl: ACCOUNT_PORTAL_URL })
   }
 
   const saveTodos = (updated) => {
@@ -148,12 +102,12 @@ export default function TodoApp() {
                 <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--accent)', color: '#fff', fontSize: '0.7rem', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{initials}</div>
                 {name}
               </div>
-              <SignOutButton className="btn btn-danger-ghost">Sign out</SignOutButton>
+              <button className="btn btn-danger-ghost" onClick={() => quant0.signOut()}>Sign out</button>
             </>
           ) : (
             <>
-              <SignInButton className="btn btn-outline">Sign In</SignInButton>
-              <SignUpButton className="btn btn-primary">Sign Up →</SignUpButton>
+              <button className="btn btn-outline" onClick={() => quant0.signIn()}>Sign In</button>
+              <button className="btn btn-primary" onClick={() => quant0.signUp()}>Sign Up →</button>
             </>
           )}
         </div>
@@ -169,26 +123,16 @@ export default function TodoApp() {
             Your tasks, <em style={{ color: 'var(--accent)', fontStyle: 'italic' }}>beautifully</em> organised.
           </h1>
           <p style={{ fontSize: '1.05rem', color: 'var(--ink-muted)', maxWidth: 460, lineHeight: 1.65, marginBottom: '2rem' }}>
-            A minimal todo app demonstrating @quant0/react — the same client_id,
-            in both hosted-redirect and embedded-widget integration modes.
+            A minimal todo app demonstrating Quant0 hosted-redirect sign-in.
           </p>
 
-          <ModeToggle mode={mode} setMode={setMode} />
-
-          {mode === 'redirect' ? (
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '1.75rem' }}>
-              <SignUpButton className="btn btn-primary btn-lg">Create account →</SignUpButton>
-              <SignInButton className="btn btn-outline btn-lg">Sign in</SignInButton>
-            </div>
-          ) : (
-            <EmbeddedAuth />
-          )}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '1.75rem' }}>
+            <button className="btn btn-primary btn-lg" onClick={() => quant0.signUp()}>Create account →</button>
+            <button className="btn btn-outline btn-lg" onClick={() => quant0.signIn()}>Sign in</button>
+          </div>
 
           <div style={{ marginTop: '3.5rem', padding: '1rem 1.5rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '0.8rem', color: 'var(--ink-muted)', maxWidth: 440, lineHeight: 1.6 }}>
-            <strong style={{ color: 'var(--ink)' }}>Demo app</strong> —{' '}
-            {mode === 'redirect'
-              ? 'Sign In / Sign Up redirects to the Quant0 backend, which forwards to the hosted login portal, then returns here with a session.'
-              : 'Sign In / Sign Up happen right here — no redirect, no page navigation, same backend and client_id as redirect mode.'}
+            <strong style={{ color: 'var(--ink)' }}>Demo app</strong> — Sign In / Sign Up redirects to the Quant0 backend, which forwards to the hosted login portal, then returns here with a session.
           </div>
         </div>
       )}
