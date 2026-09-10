@@ -6,6 +6,10 @@ on:
         description: Set automatically when triggered from the quant0 portal.
         required: false
         type: string
+      api_url:
+        description: Which quant0 instanccally when triggered from the quant0 portal.
+        required: false
+        type: string
 permissions:
   contents: read
   id-token: write
@@ -17,3 +21,4 @@ jobs:
       - uses: TGT-Quant0/qtrace-action@v1
         with:
           path: .
+          api-url: ${{ inputs.api_url }}
