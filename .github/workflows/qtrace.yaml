@@ -22,3 +22,4 @@ jobs:
         with:
           path: .
           api-url: ${{ inputs.api_url }}
+          install-url: https://qtrace.quant0.io/local/v0.1.0/install.sh
