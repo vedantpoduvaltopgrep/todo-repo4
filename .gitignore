@@ -3,3 +3,10 @@ dist/
 .env
 .env.*
 !.env.example
+
+# qtrace working state. The project identity in
+# .qtrace/config.json is NOT ignored: it is shared on purpose.
+.qtrace/results/
+.qtrace/outbox/
+.qtrace/cache/
+.vercel
