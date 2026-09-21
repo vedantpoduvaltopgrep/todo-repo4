@@ -22,4 +22,4 @@ jobs:
         with:
           path: .
           api-url: ${{ inputs.api_url }}
-          install-url: https://qtrace.quant0.io/qa/v0.1.0/install.sh
+          install-url: https://qtrace.quant0.io/v0.1.0/install.sh
